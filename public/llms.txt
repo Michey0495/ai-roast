@@ -1,0 +1,53 @@
+# AIロースト
+
+> プロフィールを入力するとAIが愛のある毒舌ツッコミ（ロースト）をしてくれるWebアプリ
+
+## Overview
+AIローストは、プロフィールを入力するとAI（Claude Haiku）が愛のある毒舌ツッコミを生成するWebアプリです。結果カードはSNS共有に最適化されています。
+
+## Features
+- プロフィール入力フォーム（名前・職業・趣味・自己PR）
+- AIによる愛のある毒舌ロースト生成
+- SNS共有用の結果カード
+- OGP対応
+- レート制限（5回/10分/IP）
+- フィードバックウィジェット
+
+## Technical Stack
+- Framework: Next.js 15 (App Router)
+- Language: TypeScript
+- Styling: Tailwind CSS + shadcn/ui
+- AI: Anthropic Claude API (claude-haiku-4-5)
+- Storage: Vercel KV
+- Hosting: Vercel
+
+## API
+- POST /api/roast - プロフィールデータを送信し、AIのロースト結果を取得
+- POST /api/feedback - フィードバック送信
+
+## Pages
+- / : トップページ（プロフィール入力フォーム）
+- /result/[id] : 結果ページ（ロースト表示・共有）
+
+## MCP (Model Context Protocol)
+- Endpoint: https://ai-roast.ezoai.jp/api/mcp
+- Protocol Version: 2024-11-05
+- Authentication: none
+
+### Tools
+- `generate_roast` - プロフィール情報からAIが愛のある毒舌ツッコミを生成する
+  - Parameters:
+    - `name` (string, required): 名前
+    - `occupation` (string, optional): 職業
+    - `hobby` (string, optional): 趣味
+    - `selfPR` (string, optional): 自己PR
+  - Returns: ロースト結果テキストとresult URL
+
+## Links
+- Website: https://ai-roast.ezoai.jp
+- GitHub: https://github.com/Michey0495/ai-roast
+- Agent Card: https://ai-roast.ezoai.jp/.well-known/agent.json
+
+## Contact
+- Developer: Ghostfee
+- GitHub: https://github.com/Michey0495
