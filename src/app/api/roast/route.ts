@@ -1,34 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
 import { nanoid } from "nanoid";
+import { callAI, buildRoastPrompt, buildProfileText } from "@/lib/ai";
 import type { RoastInput, RoastResult } from "@/types";
 
-const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5:1.5b";
-
 const RATE_LIMIT = 5;
-const RATE_WINDOW = 10 * 60; // 10 minutes
+const RATE_WINDOW_SEC = 600;
 
-async function checkRateLimit(ip: string): Promise<boolean> {
-  const key = `rate:roast:${ip}`;
-  const count = (await kv.get<number>(key)) ?? 0;
-  if (count >= RATE_LIMIT) return false;
-  await kv.set(key, count + 1, { ex: RATE_WINDOW });
-  return true;
+const memRateMap = new Map<string, { count: number; resetAt: number }>();
+
+async function isRateLimited(ip: string): Promise<boolean> {
+  try {
+    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+      const { kv } = await import("@vercel/kv");
+      const key = `ratelimit:roast:generate:${ip}`;
+      const count = await kv.incr(key);
+      if (count === 1) {
+        await kv.expire(key, RATE_WINDOW_SEC);
+      }
+      return count > RATE_LIMIT;
+    }
+  } catch {
+    // Fall through to in-memory
+  }
+
+  const now = Date.now();
+  const entry = memRateMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    memRateMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_SEC * 1000 });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT) return true;
+  entry.count++;
+  return false;
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
-  const allowed = await checkRateLimit(ip).catch(() => true);
-  if (!allowed) {
+  if (await isRateLimited(ip)) {
     return NextResponse.json(
-      { error: "しばらく待ってからもう一度お試しください（10分に5回まで）" },
+      { error: "リクエストが多すぎます。しばらく待ってからお試しください。" },
       { status: 429 }
     );
   }
 
-  const body = await req.json().catch(() => null);
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { error: "リクエストの形式が正しくありません。" },
+      { status: 400 }
+    );
+  }
 
   if (!body?.name?.trim()) {
     return NextResponse.json({ error: "名前は必須です" }, { status: 400 });
@@ -42,47 +67,11 @@ export async function POST(req: NextRequest) {
     bio: String(body.bio ?? "").slice(0, 500),
   };
 
-  const profileText = [
-    `名前: ${input.name}`,
-    input.job ? `職業/肩書き: ${input.job}` : null,
-    input.hobbies ? `趣味: ${input.hobbies}` : null,
-    input.selfpr ? `自己PR: ${input.selfpr}` : null,
-    input.bio ? `SNSプロフィール文: ${input.bio}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const prompt = `あなたは愛のある毒舌キャラです。以下のプロフィールを読んで、愛情たっぷりの面白いツッコミ（ロースト）を日本語でしてください。
-
-ルール：
-- 傷つけず、笑いを取る「愛のあるツッコミ」にする
-- 3〜5個のポイントでツッコミ
-- 各ポイントは1〜2文で簡潔に
-- 最後は「でも実は◯◯なところが最高！」で締める
-- 絵文字を適度に使う（各ポイントに1個程度）
-- フォーマット：番号なし、各ポイントは改行で区切る
-
-プロフィール：
-${profileText}
-
-ロースト開始：`;
+  const profileText = buildProfileText(input);
+  const prompt = buildRoastPrompt(profileText);
 
   try {
-    const res = await fetch(`${OLLAMA_URL}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        stream: false,
-        options: { num_ctx: 2048, temperature: 0.7 },
-      }),
-    });
-    if (!res.ok) {
-      return NextResponse.json({ error: "AI生成に失敗しました。" }, { status: 502 });
-    }
-    const data = await res.json();
-    const roastText = data.message?.content ?? "";
+    const roastText = await callAI(prompt);
 
     const id = nanoid(10);
     const result: RoastResult = {
@@ -92,12 +81,17 @@ ${profileText}
       createdAt: new Date().toISOString(),
     };
 
-    await kv.set(`roast:${id}`, result, { ex: 60 * 60 * 24 * 365 }); // 365 days
+    const { kv } = await import("@vercel/kv");
+    await kv.set(`roast:${id}`, result, { ex: 60 * 60 * 24 * 365 });
     await kv.zadd("roast:feed", { score: Date.now(), member: id });
 
     return NextResponse.json({ id });
-  } catch (err) {
-    console.error("Ollama error:", err);
-    return NextResponse.json({ error: "AIサーバーに接続できません。" }, { status: 503 });
+  } catch (e) {
+    console.error("Roast generation failed:", e);
+    const message =
+      e instanceof Error
+        ? e.message
+        : "ロースト生成に失敗しました。しばらくしてからお試しください。";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

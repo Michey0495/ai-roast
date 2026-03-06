@@ -1,50 +1,33 @@
 {
   "name": "AIロースト",
-  "description": "プロフィールを入力するとAIが愛のある毒舌ツッコミ（ロースト）をしてくれるWebアプリ",
+  "description": "プロフィールを入力するとAIが愛のある毒舌ツッコミ（ロースト）を生成するWebアプリ",
   "url": "https://ai-roast.ezoai.jp",
-  "version": "1.0.0",
+  "documentation": "https://ai-roast.ezoai.jp/llms.txt",
   "capabilities": {
-    "streaming": false,
-    "pushNotifications": false
-  },
-  "provider": {
-    "organization": "Ghostfee",
-    "url": "https://github.com/Michey0495"
-  },
-  "documentationUrl": "https://ai-roast.ezoai.jp/llms.txt",
-  "authentication": {
-    "schemes": ["none"]
-  },
-  "defaultInputModes": ["text"],
-  "defaultOutputModes": ["text"],
-  "protocols": {
     "mcp": {
       "endpoint": "https://ai-roast.ezoai.jp/api/mcp",
-      "version": "2024-11-05",
-      "tools": [
-        {
-          "name": "generate_roast",
-          "description": "プロフィール情報からAIが愛のある毒舌ツッコミを生成する",
-          "inputSchema": {
-            "type": "object",
-            "properties": {
-              "name": { "type": "string", "description": "名前" },
-              "occupation": { "type": "string", "description": "職業" },
-              "hobby": { "type": "string", "description": "趣味" },
-              "selfPR": { "type": "string", "description": "自己PR" }
-            },
-            "required": ["name"]
-          }
-        }
-      ]
+      "protocolVersion": "2024-11-05"
     }
   },
-  "skills": [
-    {
-      "id": "roast",
-      "name": "AIロースト",
-      "description": "プロフィール情報からAIが愛のある毒舌ツッコミを生成する",
-      "uri": "https://ai-roast.ezoai.jp/api/mcp"
+  "mcp": {
+    "endpoint": "https://ai-roast.ezoai.jp/api/mcp",
+    "protocol": "jsonrpc-2.0",
+    "transport": "http-post",
+    "authentication": "none",
+    "tools": [
+      {
+        "name": "generate_roast",
+        "description": "プロフィール情報からAIが愛のある毒舌ツッコミを生成する"
+      }
+    ]
+  },
+  "constraints": {
+    "rateLimits": {
+      "mcp": "10 requests per 10 minutes per IP"
     }
-  ]
+  },
+  "provider": {
+    "organization": "ezoai.jp",
+    "url": "https://ezoai.jp"
+  }
 }

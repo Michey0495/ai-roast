@@ -44,7 +44,7 @@ export default async function ResultPage({ params }: Props) {
   const shareText = `AIにロースト（毒舌ツッコミ）されました\n\n${result.roast.slice(0, 80)}...\n\nあなたもやってみる`;
 
   return (
-    <main className="min-h-screen bg-black">
+    <div className="min-h-screen">
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-8">
           <p className="text-orange-400 text-sm font-bold mb-2">{"// ROAST"}</p>
@@ -98,6 +98,6 @@ export default async function ResultPage({ params }: Props) {
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
