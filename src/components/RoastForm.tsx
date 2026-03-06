@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/spell/Spinner";
 
 export function RoastForm() {
@@ -52,10 +50,10 @@ export function RoastForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl p-8 space-y-5">
+    <form onSubmit={handleSubmit} className="bg-white/5 rounded-xl border border-white/10 p-6 space-y-5">
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1">
-          名前 <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-white/70 mb-1.5">
+          名前 <span className="text-orange-400">*</span>
         </label>
         <input
           name="name"
@@ -63,12 +61,12 @@ export function RoastForm() {
           onChange={handleChange}
           placeholder="例：田中太郎"
           maxLength={50}
-          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-orange-400/50 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-white/70 mb-1.5">
           職業 / 肩書き
         </label>
         <input
@@ -77,12 +75,12 @@ export function RoastForm() {
           onChange={handleChange}
           placeholder="例：フリーランスエンジニア、会社員（営業）など"
           maxLength={100}
-          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-orange-400/50 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-white/70 mb-1.5">
           趣味
         </label>
         <input
@@ -91,54 +89,54 @@ export function RoastForm() {
           onChange={handleChange}
           placeholder="例：筋トレ、アニメ鑑賞、読書、カフェ巡り"
           maxLength={200}
-          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-orange-400/50 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-white/70 mb-1.5">
           自己PR
         </label>
-        <Textarea
+        <textarea
           name="selfpr"
           value={form.selfpr}
           onChange={handleChange}
-          placeholder="例：誰よりも努力家です。毎朝5時起きでジムに行き…"
+          placeholder="例：誰よりも努力家です。毎朝5時起きでジムに行き..."
           maxLength={300}
           rows={3}
-          className="resize-none rounded-xl focus:ring-orange-300"
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-orange-400/50 transition-colors resize-none"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-white/70 mb-1.5">
           SNSプロフィール文 / 一言
         </label>
-        <Textarea
+        <textarea
           name="bio"
           value={form.bio}
           onChange={handleChange}
           placeholder="例：「好きな人と好きなことを好きなだけ」がモットー。夢は世界一周。"
           maxLength={500}
           rows={3}
-          className="resize-none rounded-xl focus:ring-orange-300"
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-orange-400/50 transition-colors resize-none"
         />
       </div>
 
-      <Button
+      <button
         type="submit"
         disabled={loading || !form.name.trim()}
-        className="w-full h-14 text-base font-black rounded-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:opacity-50"
+        className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-lg text-base hover:from-orange-600 hover:to-red-600 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (
-          <span className="flex items-center gap-2">
+          <span className="flex items-center justify-center gap-2">
             <Spinner size="sm" />
             AIがロースト中...
           </span>
         ) : (
           "ロースト される"
         )}
-      </Button>
+      </button>
     </form>
   );
 }
