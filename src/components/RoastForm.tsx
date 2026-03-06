@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Spinner } from "@/components/spell/Spinner";
 
 export function RoastForm() {
   const router = useRouter();
@@ -131,7 +132,7 @@ export function RoastForm() {
       >
         {loading ? (
           <span className="flex items-center gap-2">
-            <span className="animate-spin text-xl">*</span>
+            <Spinner size="sm" />
             AIがロースト中...
           </span>
         ) : (
