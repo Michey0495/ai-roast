@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { RoastForm } from "@/components/RoastForm";
 import { RecentRoasts } from "@/components/RecentRoasts";
+import { ShimmerText } from "@/components/spell/ShimmerText";
 
 export default function HomePage() {
   return (
@@ -13,9 +14,9 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
         </div>
         <div className="relative text-center px-4 animate-[fade-in-up_0.8s_ease-out]">
-          <p className="text-orange-400/80 text-xs font-mono tracking-[0.3em] uppercase mb-6">
+          <ShimmerText variant="orange" className="text-xs font-mono tracking-[0.3em] uppercase mb-6">
             AI Roast
-          </p>
+          </ShimmerText>
           <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-[1.1]">
             AIロースト
           </h1>
