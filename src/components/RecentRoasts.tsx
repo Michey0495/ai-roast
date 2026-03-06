@@ -41,13 +41,13 @@ export function RecentRoasts() {
         <Link
           key={item.id}
           href={`/result/${item.id}`}
-          className="block bg-white/80 border border-gray-200 rounded-lg p-3 hover:bg-white transition-all duration-200 cursor-pointer"
+          className="block bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 transition-all duration-200 cursor-pointer"
         >
           <div className="flex items-center justify-between mb-1">
-            <p className="text-gray-800 font-bold text-sm">{item.name}</p>
-            <span className="text-gray-400 text-xs">{timeAgo(item.createdAt)}</span>
+            <p className="text-white font-bold text-sm">{item.name}</p>
+            <span className="text-white/30 text-xs">{timeAgo(item.createdAt)}</span>
           </div>
-          <p className="text-gray-500 text-xs line-clamp-2">{item.roast}</p>
+          <p className="text-white/50 text-xs line-clamp-2">{item.roast}</p>
         </Link>
       ))}
     </div>
