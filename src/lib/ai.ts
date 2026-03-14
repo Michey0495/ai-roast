@@ -1,0 +1,102 @@
+/** MCP/API入力のサニタイズ: 制御文字除去 + 長さ制限 */
+export function sanitizeInput(input: string, maxLength: number): string {
+  return input
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .slice(0, maxLength)
+    .trim();
+}
+
+const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5:1.5b";
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+
+export async function callAI(prompt: string): Promise<string> {
+  // Anthropic (primary)
+  if (ANTHROPIC_API_KEY) {
+    const Anthropic = (await import("@anthropic-ai/sdk")).default;
+    const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+    const message = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const block = message.content[0];
+    return block.type === "text" ? block.text : "";
+  }
+
+  // Together AI (fallback)
+  if (TOGETHER_API_KEY) {
+    const res = await fetch("https://api.together.xyz/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${TOGETHER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "Qwen/Qwen2.5-7B-Instruct-Turbo",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content ?? "";
+    }
+  }
+
+  // Ollama (local fallback)
+  try {
+    const res = await fetch(`${OLLAMA_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+        options: { num_ctx: 2048, temperature: 0.7 },
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.message?.content ?? "";
+    }
+  } catch {}
+
+  throw new Error("AI backend unavailable");
+}
+
+export function buildRoastPrompt(profileText: string): string {
+  return `あなたは愛のある毒舌キャラです。以下のプロフィールを読んで、愛情たっぷりの面白いツッコミ（ロースト）を日本語でしてください。
+
+ルール：
+- 傷つけず、笑いを取る「愛のあるツッコミ」にする
+- 3〜5個のポイントでツッコミ
+- 各ポイントは1〜2文で簡潔に
+- 最後は「でも実は◯◯なところが最高！」で締める
+- 絵文字は一切使わないこと（重要）
+- フォーマット：番号なし、各ポイントは改行で区切る
+
+プロフィール：
+${profileText}
+
+ロースト開始：`;
+}
+
+export function buildProfileText(input: {
+  name: string;
+  job?: string;
+  hobbies?: string;
+  selfpr?: string;
+  bio?: string;
+}): string {
+  return [
+    `名前: ${input.name}`,
+    input.job ? `職業/肩書き: ${input.job}` : null,
+    input.hobbies ? `趣味: ${input.hobbies}` : null,
+    input.selfpr ? `自己PR: ${input.selfpr}` : null,
+    input.bio ? `SNSプロフィール文: ${input.bio}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
